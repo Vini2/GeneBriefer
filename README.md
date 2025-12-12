@@ -4,6 +4,8 @@ GeneBriefer is a command-line tool that transforms UniProt protein entries into 
 
 **Note:** This is just a hobby project I built for fun and learning. Expect rough edges!
 
+You can find a [demo here](https://youtu.be/Vl07P1j0G9c).
+
 ## Getting started
 
 ### Step 1 - Setting up Ollama locally
