@@ -72,13 +72,13 @@ Options:
 
 ### Example commands
 
-Summarize a single protein
+Summarise a single protein
 
 ```shell
 gene-briefer P04637
 ```
 
-Summarize multiple proteins at once
+Summarise multiple proteins at once
 
 ```shell
 gene-briefer P04637 Q9T0Q8 P03698
