@@ -1,0 +1,31 @@
+You are a bioinformatics assistant.
+
+I will give you information about a protein from UniProt (function, disease relevance, etc.).
+Using ONLY that information, produce a concise summary in the following JSON format:
+
+{
+  "gene": "<main gene symbol>",
+  "protein_name": "<short descriptive name>",
+  "organism": "<species>",
+  "summary_student": "<2–3 sentence explanation for a biology student>",
+  "summary_researcher": "<2–3 sentence explanation for a researcher>",
+  "key_functions": ["...", "..."],
+  "pathways_or_processes": ["...", "..."],
+  "disease_relevance": ["...", "..."],
+  "experimental_notes": ["...", "..."]
+}
+
+If information is not available, use an empty list or null.
+
+Here is the protein metadata:
+
+Accession: {{ accession }}
+Gene names: {{ gene_names | join(", ") if gene_names else "N/A" }}
+Protein name: {{ protein_name }}
+Organism: {{ organism }}
+
+FUNCTION:
+{{ function_text }}
+
+DISEASE:
+{{ disease_text }}

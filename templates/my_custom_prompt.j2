@@ -1,0 +1,23 @@
+You are an expert in bacteriophage biology.
+
+Generate ONLY a JSON object summarizing the following protein:
+
+{
+  "accession": "{{ accession }}",
+  "gene": "{{ gene_names[0] if gene_names else 'N/A' }}",
+  "protein_name": "{{ protein_name }}",
+  "organism": "{{ organism }}",
+  "student_summary": "<1–2 sentence beginner explanation>",
+  "research_summary": "<detailed technical explanation>",
+  "functions": [],
+  "diseases": [],
+  "experimental_systems": []
+}
+
+Use only the text below.
+
+FUNCTION:
+{{ function_text }}
+
+DISEASE:
+{{ disease_text }}
