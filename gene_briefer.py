@@ -130,13 +130,13 @@ def call_llm(prompt: str, accession: str, model: str) -> dict:
     click.echo(f"[{accession}] [4/5] JSON extracted.")
     return parsed
 
-def summarize_protein(
+def summarise_protein(
     accession: str,
     show_raw: bool = False,
     prompt_file: str | None = None,
     model: str = "llama3",
 ) -> dict:
-    click.echo(f"=== [{accession}] Starting summarization ===")
+    click.echo(f"=== [{accession}] Starting summarisation ===")
 
     uniprot_json = fetch_uniprot_entry(accession)
 
@@ -176,7 +176,7 @@ def summarize_protein(
 )
 def cli(accessions, raw, out, compact, prompt_file, model):
     """
-    Summarize UniProt proteins using a local LLM (Ollama).
+    Summarise UniProt proteins using a local LLM (Ollama).
 
     Example:
       gene-briefer P04637 Q9T0Q8 --model llama3:8b --prompt-file my_prompt.j2 -o out.json
@@ -197,7 +197,7 @@ def cli(accessions, raw, out, compact, prompt_file, model):
 
     for acc in accessions:
         try:
-            results[acc] = summarize_protein(
+            results[acc] = summarise_protein(
                 acc,
                 show_raw=raw,
                 prompt_file=prompt_file,
