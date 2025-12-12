@@ -172,7 +172,7 @@ def summarise_protein(
     "-m",
     default="llama3",
     show_default=True,
-    help="Ollama model name to use (e.g. 'llama3', 'llama3:8b', 'phi3:instruct').",
+    help="Ollama model name to use (e.g. 'llama3', 'llama3.2', 'gpt-oss').",
 )
 def cli(accessions, raw, out, compact, prompt_file, model):
     """
