@@ -2,6 +2,8 @@
 
 GeneBriefer is a command-line tool that transforms UniProt protein entries into clear, structured summaries using a local LLM running through Ollama. It automatically retrieves protein metadata, extracts key biological details, and generates student-friendly and researcher-level explanations in JSON format.
 
+**Note:** This is just a hobby project I built for fun and learning. Expect rough edges!
+
 ## Getting started
 
 ### Step 1 - Setting up Ollama locally
@@ -69,3 +71,56 @@ Options:
   --help              Show this message and exit.
 ```
 
+### Example commands
+
+Summarize a single protein
+
+```shell
+gene-briefer P04637
+```
+
+Summarize multiple proteins at once
+
+```shell
+gene-briefer P04637 Q9T0Q8 P03698
+```
+
+Use a different LLM model (via Ollama)
+
+```shell
+gene-briefer Q9T0Q8 --model llama3:8b
+```
+
+Show the raw UniProt JSON response
+
+```shell
+gene-briefer P04637 --raw
+```
+
+Save output to a file
+
+```shell
+gene-briefer P04637 -o tp53_summary.json
+```
+
+Compact (single-line) JSON output
+
+```shell
+gene-briefer P04637 --compact
+```
+
+Provide a custom prompt template
+
+```shell
+gene-briefer Q9T0Q8 --prompt-file templates/custom_prompt.j2
+```
+
+Combine features: custom model + template + output file
+
+```shell
+gene-briefer Q9T0Q8 --model llama3:8b-instruct --prompt-file templates/research_summary.j2 --out summary.json
+```
+
+## Acknowledgements
+
+This project was developed through vibe coding sessions with ChatGPT. This project prompted me to learn a lot about LLMs and prompt engineering.
