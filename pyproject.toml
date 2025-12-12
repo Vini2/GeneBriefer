@@ -17,6 +17,7 @@ authors = [
 dependencies = [
   "click>=8.0",
   "requests>=2.0",
+  "Jinja2>=3.0"
 ]
 
 [project.urls]
@@ -25,3 +26,7 @@ Repository = "https://github.com/Vini2/GeneBriefer"
 
 [project.scripts]
 gene-briefer = "gene_briefer:cli"
+
+[tool.setuptools]
+# We’re shipping a single-module CLI: gene_briefer.py
+py-modules = ["gene_briefer"]
