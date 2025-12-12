@@ -1,12 +1,22 @@
 #!/usr/bin/env python3
-
 import json
 import re
 import requests
 import click
+import os
+from jinja2 import Environment, FileSystemLoader, Template
 
 # --------------------------------------------
-# Core logic functions
+# Jinja2 environment for default templates
+# --------------------------------------------
+
+# Assume templates are in ./templates relative to this file
+TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
+env = Environment(loader=FileSystemLoader(TEMPLATE_DIR))
+
+
+# --------------------------------------------
+# Core logic
 # --------------------------------------------
 
 def fetch_uniprot_entry(accession: str) -> dict:
@@ -46,58 +56,45 @@ def extract_relevant_fields(uniprot_json: dict, accession: str) -> dict:
         "disease_text": "\n".join(disease_texts),
     }
 
-def build_prompt(info: dict, accession: str) -> str:
+def build_prompt(info: dict, accession: str, prompt_file: str | None = None) -> str:
+    """
+    Build the LLM prompt using Jinja2.
+
+    - If prompt_file is provided, load that file as a Jinja2 template (from string).
+    - Otherwise, use the default templates/summary_prompt.j2 file.
+    """
     click.echo(f"[{accession}] [3/5] Building prompt...")
-    gene = info["gene_names"][0] if info["gene_names"] else "N/A"
 
-    template = f"""
-You are a bioinformatics assistant.
+    # Data available to the template
+    context = {
+        "accession": accession,
+        **info,  # protein_name, gene_names, organism, function_text, disease_text
+    }
 
-I will give you information about a protein from UniProt (function, disease relevance, etc.).
-Using ONLY that information, produce a concise summary in the following JSON format:
+    if prompt_file:
+        # Custom template file passed from CLI (absolute or relative path).
+        with open(prompt_file, "r", encoding="utf-8") as f:
+            content = f.read()
+        template = env.from_string(content)  # treat file as a Jinja2 template string
+    else:
+        # Default template from the templates directory
+        template = env.get_template("summary_prompt.j2")
 
-{{
-  "gene": "<main gene symbol>",
-  "protein_name": "<short descriptive name>",
-  "organism": "<species>",
-  "summary_student": "<2–3 sentence explanation for a biology student>",
-  "summary_researcher": "<2–3 sentence explanation for a researcher>",
-  "key_functions": ["...", "..."],
-  "pathways_or_processes": ["...", "..."],
-  "disease_relevance": ["...", "..."],
-  "experimental_notes": ["...", "..."]
-}}
-
-If information is not available, use an empty list or null.
-
-Here is the protein metadata:
-
-Gene names: {", ".join(info["gene_names"]) if info["gene_names"] else "N/A"}
-Protein name: {info["protein_name"]}
-Organism: {info["organism"]}
-
-FUNCTION:
-{info["function_text"]}
-
-DISEASE:
-{info["disease_text"]}
-"""
+    prompt = template.render(**context)
     click.echo(f"[{accession}] [3/5] Prompt built.")
-    return template
+    return prompt
 
 def _extract_json_from_text(text: str) -> dict:
     text = text.strip()
     if not text:
         raise ValueError("LLM returned empty response; cannot parse JSON.")
 
-    # Try direct parse
     try:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
 
-    # Extract { ... } block
-    match = re.search(r'\{.*\}', text, re.DOTALL)
+    match = re.search(r"\{.*\}", text, re.DOTALL)
     if match:
         json_str = match.group(0)
         try:
@@ -107,12 +104,15 @@ def _extract_json_from_text(text: str) -> dict:
 
     raise ValueError(f"Could not parse JSON from LLM response:\n{text}")
 
-def call_llm(prompt: str, accession: str) -> dict:
-    click.echo(f"[{accession}] [4/5] Sending prompt to LLM via Ollama...")
+def call_llm(prompt: str, accession: str, model: str) -> dict:
+    """
+    Call a local LLM via Ollama (e.g. llama3, llama3:8b, phi3:instruct) and return JSON.
+    """
+    click.echo(f"[{accession}] [4/5] Sending prompt to LLM via Ollama (model='{model}')...")
 
     url = "http://localhost:11434/api/generate"
     payload = {
-        "model": "llama3",
+        "model": model,
         "prompt": prompt,
         "stream": False,
     }
@@ -130,9 +130,14 @@ def call_llm(prompt: str, accession: str) -> dict:
     click.echo(f"[{accession}] [4/5] JSON extracted.")
     return parsed
 
-def summarize_protein(accession: str, show_raw: bool = False) -> dict:
+def summarize_protein(
+    accession: str,
+    show_raw: bool = False,
+    prompt_file: str | None = None,
+    model: str = "llama3",
+) -> dict:
     click.echo(f"=== [{accession}] Starting summarization ===")
-    
+
     uniprot_json = fetch_uniprot_entry(accession)
 
     if show_raw:
@@ -141,11 +146,12 @@ def summarize_protein(accession: str, show_raw: bool = False) -> dict:
         click.echo("=== END RAW DATA ===\n")
 
     info = extract_relevant_fields(uniprot_json, accession)
-    prompt = build_prompt(info, accession)
-    summary = call_llm(prompt, accession)
+    prompt = build_prompt(info, accession, prompt_file=prompt_file)
+    summary = call_llm(prompt, accession, model=model)
 
     click.echo(f"[{accession}] [5/5] Done.\n")
     return summary
+
 
 # --------------------------------------------
 # CLI definition with Click
@@ -156,13 +162,33 @@ def summarize_protein(accession: str, show_raw: bool = False) -> dict:
 @click.option("--raw", is_flag=True, help="Show raw UniProt JSON.")
 @click.option("--out", "-o", type=click.Path(), help="Save output to a JSON file.")
 @click.option("--compact", is_flag=True, help="Compact JSON without indentation.")
-def cli(accessions, raw, out, compact):
+@click.option(
+    "--prompt-file",
+    type=click.Path(exists=True, dir_okay=False),
+    help="Use a custom Jinja2 template file for the LLM prompt.",
+)
+@click.option(
+    "--model",
+    "-m",
+    default="llama3",
+    show_default=True,
+    help="Ollama model name to use (e.g. 'llama3', 'llama3:8b', 'phi3:instruct').",
+)
+def cli(accessions, raw, out, compact, prompt_file, model):
     """
     Summarize UniProt proteins using a local LLM (Ollama).
-    
+
     Example:
-      gene-brief P04637 Q9T0Q8 --raw -o output.json
+      gene-briefer P04637 Q9T0Q8 --model llama3:8b --prompt-file my_prompt.j2 -o out.json
     """
+
+    # Welcome Message
+    click.echo("\n===============================================")
+    click.echo(" 🧬  GeneBriefer - Protein Summary Generator   ")
+    click.echo("       Using UniProt + Local LLM (Ollama)      ")
+    click.echo("===============================================")
+    click.echo(f" Using model: {model}\n")
+
     if not accessions:
         click.echo("Error: You must provide at least one UniProt accession.", err=True)
         raise SystemExit(1)
@@ -171,20 +197,23 @@ def cli(accessions, raw, out, compact):
 
     for acc in accessions:
         try:
-            results[acc] = summarize_protein(acc, show_raw=raw)
+            results[acc] = summarize_protein(
+                acc,
+                show_raw=raw,
+                prompt_file=prompt_file,
+                model=model,
+            )
         except Exception as e:
             click.echo(f"[{acc}] ERROR: {e}", err=True)
 
-    # Output handling
     if out:
-        with open(out, "w") as f:
+        with open(out, "w", encoding="utf-8") as f:
             if compact:
                 json.dump(results, f)
             else:
                 json.dump(results, f, indent=2)
         click.echo(f"Saved summaries to {out}")
     else:
-        # Print to stdout
         if len(results) == 1:
             single = next(iter(results.values()))
             click.echo(json.dumps(single, indent=None if compact else 2))
