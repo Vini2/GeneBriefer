@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gene-briefer"
+version = "0.1.0"
+description = "CLI tool to summarize UniProt protein entries using a local LLM (Ollama)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+
+authors = [
+  { name = "Vijini Mallawaarachchi", email = "viji.mallawaarachchi@gmail.com" }
+]
+
+dependencies = [
+  "click>=8.0",
+  "requests>=2.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Vini2/GeneBriefer"
+Repository = "https://github.com/Vini2/GeneBriefer"
+
+[project.scripts]
+gene-briefer = "gene_briefer:cli"
