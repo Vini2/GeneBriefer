@@ -179,7 +179,7 @@ def cli(accessions, raw, out, compact, prompt_file, model):
     Summarise UniProt proteins using a local LLM (Ollama).
 
     Example:
-      gene-briefer P04637 Q9T0Q8 --model llama3:8b --prompt-file my_prompt.j2 -o out.json
+      gene-briefer Q9T0Q8
     """
 
     # Welcome Message
