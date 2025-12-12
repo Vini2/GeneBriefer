@@ -58,8 +58,7 @@ Usage: gene-briefer [OPTIONS] [ACCESSIONS]...
 
   Summarise UniProt proteins using a local LLM (Ollama).
 
-  Example:   gene-briefer P04637 Q9T0Q8 --model llama3:8b --prompt-file
-  my_prompt.j2 -o out.json
+  Example:   gene-briefer Q9T0Q8
 
 Options:
   --raw               Show raw UniProt JSON.
@@ -85,10 +84,10 @@ Summarize multiple proteins at once
 gene-briefer P04637 Q9T0Q8 P03698
 ```
 
-Use a different LLM model (via Ollama)
+Use a different LLM model (via Ollama) like `llama3.2`. Make sure to have it downloaded using the command `ollama pull llama3.2`.
 
 ```shell
-gene-briefer Q9T0Q8 --model llama3:8b
+gene-briefer Q9T0Q8 --model llama3.2
 ```
 
 Show the raw UniProt JSON response
