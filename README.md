@@ -1,6 +1,6 @@
 # GeneBriefer
 
-GeneBriefer is a command-line tool that transforms UniProt protein entries into clear, structured summaries using a local LLM running through Ollama. It automatically retrieves protein metadata, extracts key biological details, and generates student-friendly and researcher-level explanations in JSON format.
+GeneBriefer is a command-line tool that transforms UniProt protein entries into clear, structured summaries using a local LLM running through Ollama. It automatically retrieves protein metadata, extracts key biological details, and generates simple and clear explanations in JSON format.
 
 **Note:** This is just a hobby project I built for fun and learning. Expect rough edges!
 
@@ -45,7 +45,7 @@ Then run the following command to install GeneBriefer.
 pip install -e .
 ```
 
-You can print the help message to test whether the installation.
+You can print the help message to test whether the installation was successful.
 
 ```shell
 gene-briefer --help
